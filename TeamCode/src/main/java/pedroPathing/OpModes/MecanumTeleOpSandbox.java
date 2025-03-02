@@ -28,8 +28,13 @@ public class MecanumTeleOpSandbox extends OpMode {
     enum LAST_CHAIN {TBD, LT, RT, ITERATING }
     LAST_CHAIN lastChain = LAST_CHAIN.TBD;
 
+    enum PEDRO_PATH_STATE { MOVE_OUT, MOVE_BACK, ABORT, TBD }
+    PEDRO_PATH_STATE pathState = PEDRO_PATH_STATE.TBD;
+    boolean runContinuous = false;
+
     boolean doUpAndBack = false;
-    int iterations = 0, currentIteration = 0, pathState;
+    int iterations = 0, currentIteration = 0;
+    double driveCoefficient = 0.65;
     Timer pathTimer;
     InputHandler inputHandler;
     LogFile detailsLog;
@@ -47,7 +52,7 @@ public class MecanumTeleOpSandbox extends OpMode {
 
         if (logDetails) { detailsLog = new LogFile(LogFile.FileType.Details,"details", "csv"); }
 
-        drive = new MecanumDrive(hardwareMap,startPose,detailsLog,logDetails);
+        drive = new MecanumDrive(hardwareMap,startPose,driveCoefficient,detailsLog,logDetails);
         if (!drive.controlHub.isMacAddressValid()) {
             drive.controlHub.reportBadMacAddress(telemetry,hardwareMap);
             telemetry.update();
@@ -63,6 +68,8 @@ public class MecanumTeleOpSandbox extends OpMode {
         telemetry.addData("DPAD_DOWN: ", "decrements 'iterations'");
         telemetry.addData("LT:        ", "Move to origin");
         telemetry.addData("RT:        ", "Move to target");
+        telemetry.addData("B:         ", "Moves robot continuously");
+        telemetry.addData("X:         ", "Abort robot movement");
         telemetry.addData("Y:         ", "Moves robot 'iterations' times");
 
         if (inputHandler.up("D1:DPAD_UP")) {
@@ -90,11 +97,12 @@ public class MecanumTeleOpSandbox extends OpMode {
     public void loop() {
         if (!handleInput()) stop();
 
-        drive.follower.setTeleOpMovementVectors(-gamepad1.left_stick_y,
-                -gamepad1.left_stick_x, -gamepad1.right_stick_x, robotCentric);
+        drive.follower.setTeleOpMovementVectors(-gamepad1.left_stick_y*driveCoefficient,
+                -gamepad1.left_stick_x*driveCoefficient,
+                -gamepad1.right_stick_x*driveCoefficient, robotCentric);
         drive.follower.update();
 
-        if (doUpAndBack) { moveOutAndBack(); }
+        if (doUpAndBack) { moveOutAndBack(runContinuous); }
 
         reportStartEnd();
     }
@@ -102,9 +110,20 @@ public class MecanumTeleOpSandbox extends OpMode {
     private boolean handleInput() {
         inputHandler.loop();
 
+        if (inputHandler.up("D1:B")) {
+            runContinuous = true;
+            pathState = PEDRO_PATH_STATE.MOVE_OUT;
+            doUpAndBack = true;
+        }
+
+        if (inputHandler.up("D1:X")){
+            pathState = PEDRO_PATH_STATE.ABORT;
+        }
+
         if (inputHandler.up("D1:Y")) {
             currentIteration = 0;
-            pathState = 0;
+            runContinuous = false;
+            pathState = PEDRO_PATH_STATE.MOVE_OUT;
             doUpAndBack = true;
         }
 
@@ -141,27 +160,32 @@ public class MecanumTeleOpSandbox extends OpMode {
         lastChain = LAST_CHAIN.RT;
     }
 
-    private void moveOutAndBack() {
-        // This could be handled with a simple if-else construct but this also
-        // shows how to set up a state machine for more complicated situations
+    private void moveOutAndBack(boolean isContinuous) {
         switch (pathState) {
-            case 0:
+            case MOVE_OUT:
                 if(!drive.follower.isBusy()) {
                     drive.follower.followPath(startToEnd);
-                    setPathState(1);
+                    setPathState(PEDRO_PATH_STATE.MOVE_BACK);
                 }
                 break;
-            case 1:
+            case MOVE_BACK:
                 if(!drive.follower.isBusy()) {
                     drive.follower.followPath(endToStart);
-                    currentIteration++;
-                    if (currentIteration>=iterations) {
-                        doUpAndBack = false;
-                        lastChain = LAST_CHAIN.ITERATING;
+                    lastChain = LAST_CHAIN.ITERATING;
+                    if (isContinuous) {
+                        setPathState(PEDRO_PATH_STATE.MOVE_OUT);
                     } else {
-                        setPathState(0);
+                        currentIteration++;
+                        if (currentIteration>=iterations) {
+                            setPathState(PEDRO_PATH_STATE.ABORT);
+                        } else {
+                            setPathState(PEDRO_PATH_STATE.MOVE_OUT);
+                        }
                     }
                 }
+                break;
+            case ABORT:
+                doUpAndBack = false;
                 break;
         }
     }
@@ -181,11 +205,10 @@ public class MecanumTeleOpSandbox extends OpMode {
                          "Heading: " + String.format("%.2f", Math.toDegrees(newEnd.getHeading()));
             telemetry.addLine("End   - " + end);
         }
-        telemetry.addData("lastChain: ", lastChain);
         telemetry.update();
     }
 
-    public void setPathState(int pState) {
+    public void setPathState(PEDRO_PATH_STATE pState) {
         pathState = pState;
         pathTimer.resetTimer();
     }

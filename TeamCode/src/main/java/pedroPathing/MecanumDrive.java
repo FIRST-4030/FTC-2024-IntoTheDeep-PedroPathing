@@ -9,8 +9,6 @@ import pedroPathing.constants.FConstants;
 import pedroPathing.constants.LConstants;
 
 public class MecanumDrive {
-    public static double maxPower = 0.65;
-
     public Follower follower;
 
     private final LogFile filePtr;
@@ -20,7 +18,7 @@ public class MecanumDrive {
     public static String macAddress;
     public ControlHub controlHub = new ControlHub();
 
-    public MecanumDrive(HardwareMap hardwareMap, Pose pose, LogFile filePtr, boolean writeIt) {
+    public MecanumDrive(HardwareMap hardwareMap, Pose pose, double maxPower,LogFile filePtr, boolean writeIt) {
         this.pose = pose;
         this.filePtr = filePtr;
         this.writeIt = writeIt;
@@ -29,8 +27,7 @@ public class MecanumDrive {
 
         Constants.setConstants(FConstants.class, LConstants.class);
         follower = new Follower(hardwareMap);
-        follower.setStartingPose(pose);
-
         follower.setMaxPower(maxPower);
+        follower.setStartingPose(pose);
     }
 }
