@@ -49,7 +49,7 @@ public class TurnTuner extends OpMode {
         dashboardPoseTracker = new DashboardPoseTracker(poseUpdater);
 
         telemetryA = new MultipleTelemetry(this.telemetry, FtcDashboard.getInstance().getTelemetry());
-        telemetryA.addLine("Turn your robot " + ANGLE + " radians. Your turn ticks to inches will be shown on the telemetry.");
+        telemetryA.addLine("Turn your robot " + Math.toDegrees(ANGLE) + " degrees. Your turn ticks to inches will be shown on the telemetry.");
         telemetryA.update();
 
         Drawing.drawRobot(poseUpdater.getPose(), "#4CAF50");
