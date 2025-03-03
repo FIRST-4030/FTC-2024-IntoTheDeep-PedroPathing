@@ -15,7 +15,7 @@ import java.util.Enumeration;
  * this class controls which set of calibration constants will be used.
  * <p>
  * After creating the <i>drive</i> object you must check to see that
- * the MAC Address is recognozed. For example,
+ * the MAC Address is recognized. For example,
  * <pre>
  *     MecanumDrive drive = new MecanumDrive(hardwareMap, beginPose, detailsLog, logDetails);
  *

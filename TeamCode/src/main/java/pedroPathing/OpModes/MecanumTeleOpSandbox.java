@@ -21,20 +21,21 @@ import pedroPathing.gamepad.InputHandler;
 @Config
 @TeleOp()
 public class MecanumTeleOpSandbox extends OpMode {
-    public static boolean logDetails = false;
+    public static boolean logDetails = true;
     public static boolean robotCentric = true;
 
     enum POSITION {SET_START, SET_END}
+
     enum LAST_CHAIN {TBD, LT, RT, ITERATING }
     LAST_CHAIN lastChain = LAST_CHAIN.TBD;
 
     enum PEDRO_PATH_STATE { MOVE_OUT, MOVE_BACK, ABORT, TBD }
     PEDRO_PATH_STATE pathState = PEDRO_PATH_STATE.TBD;
-    boolean runContinuous = false;
 
+    boolean runContinuous = false;
     boolean doUpAndBack = false;
     int iterations = 0, currentIteration = 0;
-    double driveCoefficient = 0.65;
+    double driveCoefficient = 0.5;
     Timer pathTimer;
     InputHandler inputHandler;
     LogFile detailsLog;
@@ -50,14 +51,14 @@ public class MecanumTeleOpSandbox extends OpMode {
         //Initialize gamepad handler
         inputHandler = InputAutoMapper.normal.autoMap(this);
 
-        if (logDetails) { detailsLog = new LogFile(LogFile.FileType.Details,"details", "csv"); }
+        if (logDetails) { detailsLog = new LogFile("details", "csv"); }
 
-        drive = new MecanumDrive(hardwareMap,startPose,driveCoefficient,detailsLog,logDetails);
+        drive = new MecanumDrive(hardwareMap,startPose,driveCoefficient);
         if (!drive.controlHub.isMacAddressValid()) {
             drive.controlHub.reportBadMacAddress(telemetry,hardwareMap);
             telemetry.update();
+            sleep( 10000 );
         }
-        reportStartEnd();
 
         pathTimer = new Timer();
     }
@@ -103,6 +104,8 @@ public class MecanumTeleOpSandbox extends OpMode {
         drive.follower.update();
 
         if (doUpAndBack) { moveOutAndBack(runContinuous); }
+
+        if (logDetails) { detailsLog.logDetails( drive.follower.getPose() ); }
 
         reportStartEnd();
     }
@@ -165,7 +168,8 @@ public class MecanumTeleOpSandbox extends OpMode {
             case MOVE_OUT:
                 if(!drive.follower.isBusy()) {
                     drive.follower.followPath(startToEnd);
-                    setPathState(PEDRO_PATH_STATE.MOVE_BACK);
+                    pathState = PEDRO_PATH_STATE.MOVE_BACK;
+                    pathTimer.resetTimer();
                 }
                 break;
             case MOVE_BACK:
@@ -173,15 +177,16 @@ public class MecanumTeleOpSandbox extends OpMode {
                     drive.follower.followPath(endToStart);
                     lastChain = LAST_CHAIN.ITERATING;
                     if (isContinuous) {
-                        setPathState(PEDRO_PATH_STATE.MOVE_OUT);
+                        pathState = PEDRO_PATH_STATE.MOVE_OUT;
                     } else {
                         currentIteration++;
                         if (currentIteration>=iterations) {
-                            setPathState(PEDRO_PATH_STATE.ABORT);
+                            pathState = PEDRO_PATH_STATE.ABORT;
                         } else {
-                            setPathState(PEDRO_PATH_STATE.MOVE_OUT);
+                            pathState = PEDRO_PATH_STATE.MOVE_OUT;
                         }
                     }
+                    pathTimer.resetTimer();
                 }
                 break;
             case ABORT:
@@ -208,11 +213,6 @@ public class MecanumTeleOpSandbox extends OpMode {
         telemetry.update();
     }
 
-    public void setPathState(PEDRO_PATH_STATE pState) {
-        pathState = pState;
-        pathTimer.resetTimer();
-    }
-
     void setPosition(POSITION pos) {
         if (pos == POSITION.SET_START) {
             newStart = getPosition();
@@ -230,6 +230,14 @@ public class MecanumTeleOpSandbox extends OpMode {
                     .addPath(new BezierLine(newStart, newEnd))
                     .setConstantHeadingInterpolation(newEnd.getHeading())
                     .build();
+        }
+    }
+
+    public final void sleep(long milliseconds) {
+        try {
+            Thread.sleep(milliseconds);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 }
