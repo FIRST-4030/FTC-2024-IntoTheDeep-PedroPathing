@@ -21,7 +21,7 @@ import pedroPathing.gamepad.InputHandler;
 @Config
 @TeleOp()
 public class MecanumTeleOpSandbox extends OpMode {
-    public static boolean logDetails = true;
+    public static boolean logDetails = false;
     public static boolean robotCentric = true;
 
     enum POSITION {SET_START, SET_END}
@@ -32,6 +32,7 @@ public class MecanumTeleOpSandbox extends OpMode {
     enum PEDRO_PATH_STATE { MOVE_OUT, MOVE_BACK, ABORT, TBD }
     PEDRO_PATH_STATE pathState = PEDRO_PATH_STATE.TBD;
 
+    boolean useLeftStickToDrive = true;
     boolean runContinuous = false;
     boolean doUpAndBack = false;
     int iterations = 0, currentIteration = 0;
@@ -56,7 +57,6 @@ public class MecanumTeleOpSandbox extends OpMode {
         drive = new MecanumDrive(hardwareMap,startPose,driveCoefficient);
         if (!drive.controlHub.isMacAddressValid()) {
             drive.controlHub.reportBadMacAddress(telemetry,hardwareMap);
-            telemetry.update();
             sleep( 10000 );
         }
 
@@ -70,8 +70,8 @@ public class MecanumTeleOpSandbox extends OpMode {
         telemetry.addData("LT:        ", "Move to origin");
         telemetry.addData("RT:        ", "Move to target");
         telemetry.addData("B:         ", "Moves robot continuously");
-        telemetry.addData("X:         ", "Abort robot movement");
         telemetry.addData("Y:         ", "Moves robot 'iterations' times");
+        telemetry.addData("START:     ", "Abort robot movement");
 
         if (inputHandler.up("D1:DPAD_UP")) {
             iterations++;
@@ -98,9 +98,16 @@ public class MecanumTeleOpSandbox extends OpMode {
     public void loop() {
         if (!handleInput()) stop();
 
-        drive.follower.setTeleOpMovementVectors(-gamepad1.left_stick_y*driveCoefficient,
-                -gamepad1.left_stick_x*driveCoefficient,
-                -gamepad1.right_stick_x*driveCoefficient, robotCentric);
+        if (useLeftStickToDrive) {
+            drive.follower.setTeleOpMovementVectors(-gamepad1.left_stick_y*driveCoefficient,
+                    -gamepad1.left_stick_x*driveCoefficient,
+                    -gamepad1.right_stick_x*driveCoefficient, robotCentric);
+        } else {
+            drive.follower.setTeleOpMovementVectors(-gamepad1.right_stick_y*driveCoefficient,
+                    -gamepad1.right_stick_x*driveCoefficient,
+                    -gamepad1.left_stick_x*driveCoefficient, robotCentric);
+        }
+
         drive.follower.update();
 
         if (doUpAndBack) { moveOutAndBack(runContinuous); }
@@ -119,7 +126,7 @@ public class MecanumTeleOpSandbox extends OpMode {
             doUpAndBack = true;
         }
 
-        if (inputHandler.up("D1:X")){
+        if (inputHandler.up("D1:START")){
             pathState = PEDRO_PATH_STATE.ABORT;
         }
 

@@ -164,5 +164,6 @@ public class ControlHub {
         telemetry.addLine("           "+this.getMacAddress());
         telemetry.addLine();
         telemetry.addLine("Update 'ControlHub' to include this new address.");
+        telemetry.update();
     }
 }

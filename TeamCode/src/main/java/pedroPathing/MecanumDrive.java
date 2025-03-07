@@ -10,14 +10,18 @@ import pedroPathing.constants.LConstants;
 
 public class MecanumDrive {
     public Follower follower;
+    HardwareMap hardwareMap;
 
     Pose pose;
+    double maxPower;
 
     public static String macAddress;
     public ControlHub controlHub = new ControlHub();
 
     public MecanumDrive(HardwareMap hardwareMap, Pose pose, double maxPower) {
+        this.hardwareMap = hardwareMap;
         this.pose = pose;
+        this.maxPower = maxPower;
 
         this.macAddress = controlHub.getMacAddress();
 
