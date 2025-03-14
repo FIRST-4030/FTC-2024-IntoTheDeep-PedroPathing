@@ -14,16 +14,16 @@ import java.util.Locale;
 
 public class LogFile {
 
-    private final String prefix;
-    private final String fileType;
-    String logFolder;
+    private String prefix = null;
+    private String fileType = null;
+    private String poseFile = null;
+    String logFolder, poseFolder;
+    String message;
 
-    private final FileWriter logWriter;
+    private FileWriter logWriter = null, posePositions = null;
 
-    final long absoluteStartTime;
-    private long deltaTime;
+    long absoluteStartTime = 0;
 
-    public String fullPath = null;
     String timeStamp;
 
     /**
@@ -38,7 +38,6 @@ public class LogFile {
         this.prefix = prefix;
         this.fileType = fileType;
 
-        String message;
         absoluteStartTime = System.currentTimeMillis();
 
         // Define a unique file name
@@ -53,31 +52,12 @@ public class LogFile {
 
     /**
      *
-     * @param message - string of characters to be written with a appended <NL>
+     * @param useDate boolean used to indicate whether the file name should include the current date & time
+     * @return name of the created file
      */
-    public void log(String message) {
-        localLog( logWriter, message );
-    }
-
-    /**
-     *
-     * @param pose - heading and position
-     */
-    public void logDetails(Pose pose) {
-        deltaTime = System.currentTimeMillis() - absoluteStartTime;
-        int filter = 0;
-        @SuppressLint("DefaultLocale")
-        String message = filter + "," +
-                String.format("%.4f", (deltaTime/1000.0)) + "," +
-                String.format("%.4f", pose.getX()) + "," +
-                String.format("%.4f", pose.getY()) + "," +
-                String.format("%.4f", Math.toDegrees(pose.getHeading()));
-
-        localLog( logWriter, message );
-    }
-
     FileWriter createFile(boolean useDate) {
 
+        // Create a file to save pose positions with every loop thru 'MecanumDrive'
         FileWriter newFile = null;
         String fileName;
 
@@ -91,7 +71,6 @@ public class LogFile {
 
         try {
             File logFile = new File(fileName);
-            fullPath = logFile.getPath();
             if (!logFile.exists()) {
                 newFile = new FileWriter(logFile);
             } else {
@@ -101,6 +80,31 @@ public class LogFile {
             e.printStackTrace();
         }
         return newFile;
+    }
+
+    /**
+     *
+     * @param message - string of characters to be written with a appended <NL>
+     */
+    public void log(String message) {
+        localLog( logWriter, message );
+    }
+
+    /**
+     *
+     * @param pose - heading and position
+     */
+    @SuppressLint("DefaultLocale")
+    public void logDetails(Pose pose) {
+        long deltaTime = System.currentTimeMillis() - absoluteStartTime;
+        int filter = 0;
+        message = filter + "," +
+                String.format("%.4f", (deltaTime /1000.0)) + "," +
+                String.format("%.4f", pose.getX()) + "," +
+                String.format("%.4f", pose.getY()) + "," +
+                String.format("%.4f", Math.toDegrees(pose.getHeading()));
+
+        localLog( logWriter, message );
     }
 
     private void localLog(FileWriter file, String message) {
