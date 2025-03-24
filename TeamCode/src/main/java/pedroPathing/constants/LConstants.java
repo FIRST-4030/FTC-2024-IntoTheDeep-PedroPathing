@@ -18,7 +18,7 @@ public class LConstants {
         TwoWheelConstants.IMU_Orientation = new RevHubOrientationOnRobot(
                 RevHubOrientationOnRobot.LogoFacingDirection.UP,
                 RevHubOrientationOnRobot.UsbFacingDirection.LEFT);
-        DriveEncoderConstants.turnTicksToInches = 0.99965;
+        DriveEncoderConstants.turnTicksToInches = 0.99204;
     }
 }
 

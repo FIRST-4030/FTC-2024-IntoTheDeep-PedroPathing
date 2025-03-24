@@ -27,14 +27,16 @@ import pedroPathing.gamepad.InputHandler;
 public class ChartPath extends OpMode {
     public static boolean logDetails = false;
     public static boolean robotCentric = true;
+    public static int recordInterval = 50;
 
     enum Options { TBD, START, NEXT, END }
     ChartPath.Options option = ChartPath.Options.TBD;
 
     boolean useLeftStickToDrive = true;
-    boolean returnToStart = false, retracePath = false;
-    double driveCoefficient = 0.6;
-    int currentPose;
+    boolean recordAll = false, returnToStart = false;
+    boolean retracePath = false, saveStartingWayPoint = true;
+    double driveCoefficient = 1.0;
+    int currentPose = 0, intervalCount = 0;
     String poseFile = "posePositions.csv";
     Timer pathTimer;
     InputHandler inputHandler;
@@ -49,11 +51,10 @@ public class ChartPath extends OpMode {
 
     @Override
     public void init() {
-        //Initialize gamepad handler
         inputHandler = InputAutoMapper.normal.autoMap(this);
 
         if (logDetails) { detailsLog = new LogFile("details", "csv"); }
-        posePositions = new CSVReader(poseFile,true);
+        posePositions = new CSVReader(poseFile);
 
         drive = new MecanumDrive(hardwareMap,startPose,driveCoefficient);
         if (!drive.controlHub.isMacAddressValid()) {
@@ -68,8 +69,10 @@ public class ChartPath extends OpMode {
     public void init_loop() {
         telemetry.addData("A:    ", "Set way point");
         telemetry.addData("B:    ", "Return to start");
-        telemetry.addData("X:    ", "Read back stored pose values");
-        telemetry.addData("Y:    ", "Replay route");
+        telemetry.addData("X:    ", "Start: Record All");
+        telemetry.addData("Y:    ", "Stop:  Record All");
+        telemetry.addData("LB    ", "Read back stored pose values");
+        telemetry.addData("RB    ", "Retrace path");
 
         telemetry.addData("Compiled on:", BuildConfig.COMPILATION_DATE);
         telemetry.update();
@@ -78,8 +81,8 @@ public class ChartPath extends OpMode {
 
     @Override
     public void start() {
-        setWayPoint(startPose);
         drive.follower.startTeleopDrive();
+        saveStartingWayPoint = true;
     }
 
     @Override
@@ -102,6 +105,15 @@ public class ChartPath extends OpMode {
 
         drive.follower.update();
 
+        if (recordAll) {
+            if (intervalCount>=recordInterval) {  // spread out the recording of points
+                setWayPoint();
+                intervalCount= 0;
+            } else {
+                intervalCount++;
+            }
+        }
+
         if (returnToStart) {
             if (!drive.follower.isBusy()) {
                 returnToStart();
@@ -120,6 +132,10 @@ public class ChartPath extends OpMode {
         inputHandler.loop();
 
         if (inputHandler.up("D1:A")) {  // set a way point
+            if (saveStartingWayPoint) {
+                posePositions.openFile();
+                saveStartingWayPoint = false;
+            }
             setWayPoint();
         }
 
@@ -127,14 +143,26 @@ public class ChartPath extends OpMode {
             returnToStart = true;
         }
 
-        if (inputHandler.up("D1:X")) {
-            readBackStoredPosePositions();
+        if (inputHandler.up("D1:X")) {  // record all points
+            if (saveStartingWayPoint) {
+                posePositions.openFile();
+                saveStartingWayPoint = false;
+            }
+            recordAll = true;
         }
 
-        if (inputHandler.up("D1:Y")) {  // retrace path
+        if (inputHandler.up("D1:Y")) {  // record all points
+            recordAll = false;
+        }
+
+        if (inputHandler.up("D1:RB")) {  // retrace path
             retraceSetup();
             option = Options.START;
             retracePath   = true;
+        }
+
+        if (inputHandler.up("D1:LB")) {
+            readBackStoredPosePositions();
         }
     }
 
@@ -151,7 +179,7 @@ public class ChartPath extends OpMode {
     }
 
     void readBackStoredPosePositions() {
-        CSVReader readBackData = new CSVReader(poseFile,false);
+        CSVReader readBackData = new CSVReader(poseFile);
         readBackData.readFile();
 
         for (int i=0 ; i<readBackData.values.size() ; i++) {
@@ -169,6 +197,10 @@ public class ChartPath extends OpMode {
         switch (option) {
             case START:
                 lastPose = convertToPose(posePositions.values.get(currentPose)); // get starting point
+                if (lastPose.roughlyEquals(startPose)) {  // can't move if 2 poses are equal
+                    currentPose++; // increment counter into steps
+                    lastPose = convertToPose(posePositions.values.get(currentPose)); // get starting point
+                }
                 currentPose++; // increment counter into steps
                 option = Options.NEXT;
                 break;
@@ -176,11 +208,16 @@ public class ChartPath extends OpMode {
                 if (!drive.follower.isBusy()) {
                     if (currentPose<posePositions.values.size()) {
                         thisPose = convertToPose(posePositions.values.get(currentPose));
-                        nextStep = drive.follower.pathBuilder()
-                                .addPath(new BezierLine(lastPose, thisPose))
-                                .setLinearHeadingInterpolation(lastPose.getHeading(),thisPose.getHeading())
-                                .build();
-                        drive.follower.followPath(nextStep);
+                        // Moving the robot to a new spot requires that there be some difference
+                        // between the pose position and/or heading. Being so, you always need to
+                        // check for that condition before issuing a command to move
+                        if (!lastPose.roughlyEquals(thisPose)) {
+                            nextStep = drive.follower.pathBuilder()
+                                    .addPath(new BezierLine(lastPose, thisPose))
+                                    .setLinearHeadingInterpolation(lastPose.getHeading(), thisPose.getHeading())
+                                    .build();
+                            drive.follower.followPath(nextStep);
+                        }
                         lastPose = thisPose;
                         currentPose++; // increment counter into steps
                         option = Options.NEXT;   // redundant setting of option toi be clear as to what is going on
@@ -190,15 +227,16 @@ public class ChartPath extends OpMode {
                 }
                 break;
             case END:
-                if (!drive.follower.isBusy()) {
+//                if (!drive.follower.isBusy()) {
                     retracePath=false;
-                    readBackStoredPosePositions();                }
+//                    readBackStoredPosePositions();
+//                }
                 break;
         }
     }
 
     void retraceSetup() throws IOException {
-        posePositions.closeFile();
+        if (posePositions.fileIsOpen) { posePositions.closeFile(); }
         posePositions.readFile();
         currentPose = 0;
     }
@@ -213,10 +251,6 @@ public class ChartPath extends OpMode {
 
     void setWayPoint() {
         posePositions.logPose(drive.follower.getPose());
-    }
-
-    void setWayPoint(Pose posePos) {
-        posePositions.logPose(posePos);
     }
 
     public void sleep(long milliseconds) {

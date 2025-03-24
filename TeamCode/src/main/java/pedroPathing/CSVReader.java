@@ -5,34 +5,32 @@ import android.os.Environment;
 
 import com.pedropathing.localization.Pose;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
-
 import java.io.*;
 import java.util.*;
 
 public class CSVReader {
     public List<String[]> values = new ArrayList<>();
+    public boolean fileIsOpen = false;
     String filePath;
     FileWriter csvFile = null;
     File poseFile = null;
 
-    public CSVReader(String fileName, boolean openForWrite) {
+    public CSVReader(String fileName) {
 
         String poseFolder = Environment.getExternalStorageDirectory().getPath(); // /storage/emulated/0 also maps to /sdcard
 
         filePath = poseFolder + "/FIRST/logs/" + fileName;
-
-        if (openForWrite) {
-            try {
-                poseFile = new File(filePath);
-                csvFile = new FileWriter(poseFile, false); // Append mode
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
     }
 
+    public void openFile() {
+        try {
+            poseFile = new File(filePath);
+            csvFile = new FileWriter(poseFile, false); // Append mode
+            fileIsOpen = true;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
     public void readFile() {
         String line;
         String[] oneLine;

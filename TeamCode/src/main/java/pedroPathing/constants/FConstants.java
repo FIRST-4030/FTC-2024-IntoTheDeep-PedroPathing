@@ -7,7 +7,7 @@ import com.pedropathing.util.CustomPIDFCoefficients;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 public class FConstants {
-    public static final double motorPower = 0.65;
+    public static final double motorPower = 0.75;  // Only used by Localization
 
     static {
         FollowerConstants.localizers = Localizers.TWO_WHEEL;
@@ -24,22 +24,22 @@ public class FConstants {
 
         FollowerConstants.mass = 6.078;
 
-        FollowerConstants.xMovement = 65.215975;
-        FollowerConstants.yMovement = 55.683425;
+        FollowerConstants.xMovement = 60.06962845;
+        FollowerConstants.yMovement = 49.56729834;
 
-        FollowerConstants.forwardZeroPowerAcceleration = -31.631075;
-        FollowerConstants.lateralZeroPowerAcceleration = -55.467575;
+        FollowerConstants.forwardZeroPowerAcceleration = -35.23319205;
+        FollowerConstants.lateralZeroPowerAcceleration = -59.49450026;
 
-        FollowerConstants.translationalPIDFCoefficients.setCoefficients(0.1,0,0.01,0);
-        FollowerConstants.useSecondaryTranslationalPID = true;
+        FollowerConstants.translationalPIDFCoefficients.setCoefficients(0.5,0,0.01,0);
+        FollowerConstants.useSecondaryTranslationalPID = false;
         FollowerConstants.secondaryTranslationalPIDFCoefficients.setCoefficients(0.1,0,0.01,0); // Not being used, @see useSecondaryTranslationalPID
 
         FollowerConstants.headingPIDFCoefficients.setCoefficients(2,0,0.1,0);
-        FollowerConstants.useSecondaryHeadingPID = true;
+        FollowerConstants.useSecondaryHeadingPID = false;
         FollowerConstants.secondaryHeadingPIDFCoefficients.setCoefficients(2,0,0.1,0); // Not being used, @see useSecondaryHeadingPID
 
         FollowerConstants.drivePIDFCoefficients.setCoefficients(0.1,0,0,0.6,0);
-        FollowerConstants.useSecondaryDrivePID = true;
+        FollowerConstants.useSecondaryDrivePID = false;
         FollowerConstants.secondaryDrivePIDFCoefficients.setCoefficients(0.1,0,0,0.6,0); // Not being used, @see useSecondaryDrivePID
 
         FollowerConstants.zeroPowerAccelerationMultiplier = 4;
