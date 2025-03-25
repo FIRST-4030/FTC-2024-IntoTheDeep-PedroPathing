@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 public class FConstants {
     public static final double motorPower = 0.75;  // Only used by Localization
 
-    static {
+    static{
         FollowerConstants.localizers = Localizers.TWO_WHEEL;
 
         FollowerConstants.leftFrontMotorName = "leftFront";
@@ -30,7 +30,7 @@ public class FConstants {
         FollowerConstants.forwardZeroPowerAcceleration = -35.23319205;
         FollowerConstants.lateralZeroPowerAcceleration = -59.49450026;
 
-        FollowerConstants.translationalPIDFCoefficients.setCoefficients(0.5,0,0.01,0);
+        FollowerConstants.translationalPIDFCoefficients.setCoefficients(0.6,0,0.005,0);
         FollowerConstants.useSecondaryTranslationalPID = false;
         FollowerConstants.secondaryTranslationalPIDFCoefficients.setCoefficients(0.1,0,0.01,0); // Not being used, @see useSecondaryTranslationalPID
 
@@ -38,11 +38,11 @@ public class FConstants {
         FollowerConstants.useSecondaryHeadingPID = false;
         FollowerConstants.secondaryHeadingPIDFCoefficients.setCoefficients(2,0,0.1,0); // Not being used, @see useSecondaryHeadingPID
 
-        FollowerConstants.drivePIDFCoefficients.setCoefficients(0.1,0,0,0.6,0);
-        FollowerConstants.useSecondaryDrivePID = false;
+        FollowerConstants.drivePIDFCoefficients.setCoefficients(0.008,0.0001,0,0.6,0);
+        FollowerConstants.useSecondaryDrivePID = true;
         FollowerConstants.secondaryDrivePIDFCoefficients.setCoefficients(0.1,0,0,0.6,0); // Not being used, @see useSecondaryDrivePID
 
-        FollowerConstants.zeroPowerAccelerationMultiplier = 4;
+        FollowerConstants.zeroPowerAccelerationMultiplier = 2;
         FollowerConstants.centripetalScaling = 0.0005;
 
         FollowerConstants.pathEndTimeoutConstraint = 500;

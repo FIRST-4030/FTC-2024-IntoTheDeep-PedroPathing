@@ -36,7 +36,7 @@ import pedroPathing.constants.LConstants;
 public class StraightBackAndForth extends OpMode {
     private Telemetry telemetryA;
 
-    public static double DISTANCE = 30;
+    public static double DISTANCE = 50;
 
     private boolean forward = true;
 
@@ -53,7 +53,7 @@ public class StraightBackAndForth extends OpMode {
     public void init() {
         Constants.setConstants(FConstants.class, LConstants.class);
         follower = new Follower(hardwareMap);
-        follower.setMaxPower(maxPower);
+        //follower.setMaxPower(maxPower);
 
         forwards = new Path(new BezierLine(new Point(0,0, Point.CARTESIAN), new Point(DISTANCE,0, Point.CARTESIAN)));
         forwards.setConstantHeadingInterpolation(0);
