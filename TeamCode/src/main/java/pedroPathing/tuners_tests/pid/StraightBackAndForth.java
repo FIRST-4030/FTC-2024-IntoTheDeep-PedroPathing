@@ -5,16 +5,18 @@ import static com.pedropathing.follower.FollowerConstants.maxPower;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+import com.pedropathing.localization.Pose;
 import com.pedropathing.util.Constants;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import com.pedropathing.follower.Follower;
 import com.pedropathing.pathgen.BezierLine;
 import com.pedropathing.pathgen.Path;
 import com.pedropathing.pathgen.Point;
 
+import pedroPathing.LogFile;
+import pedroPathing.MecanumDrive;
 import pedroPathing.constants.FConstants;
 import pedroPathing.constants.LConstants;
 
@@ -34,16 +36,22 @@ import pedroPathing.constants.LConstants;
 @Config
 @Autonomous (name = "Straight Back And Forth", group = "PIDF Tuning")
 public class StraightBackAndForth extends OpMode {
-    private Telemetry telemetryA;
 
-    public static double DISTANCE = 50;
+    public static double DISTANCE = 40;
+    public static boolean logDetails = true;
+
+    private Telemetry telemetryA;
 
     private boolean forward = true;
 
-    private Follower follower;
-
     private Path forwards;
     private Path backwards;
+    LogFile detailsLog;
+    MecanumDrive drive;
+    int offset = 0;
+    double target = 0;
+    FConstants fConstants = new FConstants();
+    LConstants lConstants = new LConstants();
 
     /**
      * This initializes the Follower and creates the forward and backward Paths. Additionally, this
@@ -51,16 +59,20 @@ public class StraightBackAndForth extends OpMode {
      */
     @Override
     public void init() {
-        Constants.setConstants(FConstants.class, LConstants.class);
-        follower = new Follower(hardwareMap);
-        //follower.setMaxPower(maxPower);
+        if (logDetails) { detailsLog = new LogFile("details", "csv"); }
+
+        drive = new MecanumDrive(hardwareMap, new Pose(0, 0, 0), maxPower);
+
+        fConstants = new FConstants();
+        lConstants = new LConstants();
+        Constants.setConstants(fConstants.getClass(), lConstants.getClass());
 
         forwards = new Path(new BezierLine(new Point(0,0, Point.CARTESIAN), new Point(DISTANCE,0, Point.CARTESIAN)));
         forwards.setConstantHeadingInterpolation(0);
         backwards = new Path(new BezierLine(new Point(DISTANCE,0, Point.CARTESIAN), new Point(0,0, Point.CARTESIAN)));
         backwards.setConstantHeadingInterpolation(0);
 
-        follower.followPath(forwards);
+        drive.follower.followPath(forwards);
 
         telemetryA = new MultipleTelemetry(this.telemetry, FtcDashboard.getInstance().getTelemetry());
         telemetryA.addLine("This will run the robot in a straight line going " + DISTANCE
@@ -75,18 +87,21 @@ public class StraightBackAndForth extends OpMode {
      */
     @Override
     public void loop() {
-        follower.update();
-        if (!follower.isBusy()) {
+        drive.follower.update();
+        if (!drive.follower.isBusy()) {
             if (forward) {
+                target = DISTANCE;
                 forward = false;
-                follower.followPath(backwards);
+                drive.follower.followPath(backwards);
             } else {
+                target = 0;
                 forward = true;
-                follower.followPath(forwards);
+                drive.follower.followPath(forwards);
             }
         }
+        if (logDetails) { detailsLog.logStraightBackAndForth( offset++, target, drive.follower.getPose()); }
 
-        telemetryA.addData("going forward", forward);
-        follower.telemetryDebug(telemetryA);
+        telemetryA.addData("going forward",forward);
+        drive.follower.telemetryDebug(telemetryA);
     }
 }

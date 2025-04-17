@@ -54,7 +54,9 @@ public class LocalizationTest extends OpMode {
      */
     @Override
     public void init() {
-        Constants.setConstants(FConstants.class, LConstants.class);
+        FConstants fConstants = new FConstants();
+        LConstants lConstants = new LConstants();
+        Constants.setConstants(fConstants.getClass(), lConstants.getClass());
         poseUpdater = new PoseUpdater(hardwareMap);
 
         dashboardPoseTracker = new DashboardPoseTracker(poseUpdater);

@@ -116,8 +116,6 @@ public class MecanumAutoSandbox extends OpMode {
 
         if (doAutonomous) {
             autonomousPaths();
-
-            if (logDetails) { detailsLog.logDetails(drive.follower.getPose()); }
         }
     }
 

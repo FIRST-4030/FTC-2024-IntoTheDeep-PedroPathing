@@ -267,7 +267,9 @@ public class ExampleBucketAuto extends OpMode {
         opmodeTimer = new Timer();
         opmodeTimer.resetTimer();
 
-        Constants.setConstants(FConstants.class, LConstants.class);
+        FConstants fConstants = new FConstants();
+        LConstants lConstants = new LConstants();
+        Constants.setConstants(fConstants.getClass(), lConstants.getClass());
         follower = new Follower(hardwareMap);
         follower.setStartingPose(startPose);
         buildPaths();

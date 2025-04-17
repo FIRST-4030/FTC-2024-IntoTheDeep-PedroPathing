@@ -112,8 +112,6 @@ public class MecanumTeleOpSandbox extends OpMode {
 
         if (doUpAndBack) { moveOutAndBack(runContinuous); }
 
-        if (logDetails) { detailsLog.logDetails( drive.follower.getPose() ); }
-
         reportStartEnd();
     }
 

@@ -43,8 +43,9 @@ public class TurnTuner extends OpMode {
      */
     @Override
     public void init() {
-        Constants.setConstants(FConstants.class, LConstants.class);
-        poseUpdater = new PoseUpdater(hardwareMap);
+        FConstants fConstants = new FConstants();
+        LConstants lConstants = new LConstants();
+        Constants.setConstants(fConstants.getClass(), lConstants.getClass());        poseUpdater = new PoseUpdater(hardwareMap);
 
         dashboardPoseTracker = new DashboardPoseTracker(poseUpdater);
 

@@ -124,8 +124,6 @@ public class ChartPath extends OpMode {
         if (retracePath) {
             retracePaths();
         }
-
-        if (logDetails) { detailsLog.logDetails( drive.follower.getPose() ); }
     }
 
     void handleInput() throws IOException {

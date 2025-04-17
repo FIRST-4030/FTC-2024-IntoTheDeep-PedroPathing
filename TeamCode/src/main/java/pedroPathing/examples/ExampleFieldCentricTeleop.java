@@ -26,7 +26,9 @@ public class ExampleFieldCentricTeleop extends OpMode {
     /** This method is call once when init is played, it initializes the follower **/
     @Override
     public void init() {
-        Constants.setConstants(FConstants.class, LConstants.class);
+        FConstants fConstants = new FConstants();
+        LConstants lConstants = new LConstants();
+        Constants.setConstants(fConstants.getClass(), lConstants.getClass());
         follower = new Follower(hardwareMap);
         follower.setStartingPose(startPose);
     }
