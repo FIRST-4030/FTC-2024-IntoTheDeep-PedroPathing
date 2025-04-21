@@ -7,6 +7,7 @@ import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.pedropathing.localization.Pose;
 import com.pedropathing.util.Constants;
+import com.pedropathing.util.CustomPIDFCoefficients;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
@@ -52,6 +53,7 @@ public class StraightBackAndForth extends OpMode {
     double target = 0;
     FConstants fConstants = new FConstants();
     LConstants lConstants = new LConstants();
+    CustomPIDFCoefficients localTranslational = fConstants.getTranslationalCoefficients();
 
     /**
      * This initializes the Follower and creates the forward and backward Paths. Additionally, this
@@ -73,8 +75,10 @@ public class StraightBackAndForth extends OpMode {
         backwards.setConstantHeadingInterpolation(0);
 
         drive.follower.followPath(forwards);
+        target = DISTANCE;
 
         telemetryA = new MultipleTelemetry(this.telemetry, FtcDashboard.getInstance().getTelemetry());
+
         telemetryA.addLine("This will run the robot in a straight line going " + DISTANCE
                             + " inches forward. The robot will go forward and backward continuously"
                             + " along the path. Make sure you have enough room.");
@@ -90,16 +94,16 @@ public class StraightBackAndForth extends OpMode {
         drive.follower.update();
         if (!drive.follower.isBusy()) {
             if (forward) {
-                target = DISTANCE;
+                target = 0;
                 forward = false;
                 drive.follower.followPath(backwards);
             } else {
-                target = 0;
+                target = DISTANCE;
                 forward = true;
                 drive.follower.followPath(forwards);
             }
         }
-        if (logDetails) { detailsLog.logStraightBackAndForth( offset++, target, drive.follower.getPose()); }
+        if (logDetails) { detailsLog.logStraightBackAndForth( offset++, target, drive.follower.getPose(), localTranslational); }
 
         telemetryA.addData("going forward",forward);
         drive.follower.telemetryDebug(telemetryA);

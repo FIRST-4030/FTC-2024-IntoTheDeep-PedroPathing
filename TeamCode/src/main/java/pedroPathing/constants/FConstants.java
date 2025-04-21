@@ -1,8 +1,9 @@
 package pedroPathing.constants;
 
+import static com.pedropathing.follower.FollowerConstants.translationalPIDFCoefficients;
+
 import com.pedropathing.localization.Localizers;
 import com.pedropathing.follower.FollowerConstants;
-import com.pedropathing.util.CustomFilteredPIDFCoefficients;
 import com.pedropathing.util.CustomPIDFCoefficients;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
@@ -30,7 +31,7 @@ public class FConstants {
         FollowerConstants.forwardZeroPowerAcceleration = -35.23319205;
         FollowerConstants.lateralZeroPowerAcceleration = -59.49450026;
 
-        FollowerConstants.translationalPIDFCoefficients.setCoefficients(0.9,0,0.005,0);
+        translationalPIDFCoefficients.setCoefficients(0.3297,0,0.005,0);
         FollowerConstants.useSecondaryTranslationalPID = false;
         FollowerConstants.secondaryTranslationalPIDFCoefficients.setCoefficients(0.1,0,0.01,0); // Not being used, @see useSecondaryTranslationalPID
 
@@ -39,7 +40,7 @@ public class FConstants {
         FollowerConstants.secondaryHeadingPIDFCoefficients.setCoefficients(2,0,0.1,0); // Not being used, @see useSecondaryHeadingPID
 
         FollowerConstants.drivePIDFCoefficients.setCoefficients(0.008,0.0001,0,0.6,0);
-        FollowerConstants.useSecondaryDrivePID = true;
+        FollowerConstants.useSecondaryDrivePID = false;
         FollowerConstants.secondaryDrivePIDFCoefficients.setCoefficients(0.1,0,0,0.6,0); // Not being used, @see useSecondaryDrivePID
 
         FollowerConstants.zeroPowerAccelerationMultiplier = 2;
@@ -50,5 +51,15 @@ public class FConstants {
         FollowerConstants.pathEndVelocityConstraint = 0.1;
         FollowerConstants.pathEndTranslationalConstraint = 0.1;
         FollowerConstants.pathEndHeadingConstraint = 0.007;
+    }
+
+    public CustomPIDFCoefficients getTranslationalCoefficients() {
+        CustomPIDFCoefficients localTranslational = new CustomPIDFCoefficients(
+                translationalPIDFCoefficients.P,
+                translationalPIDFCoefficients.I,
+                translationalPIDFCoefficients.D,
+                translationalPIDFCoefficients.F );
+
+        return localTranslational;
     }
 }

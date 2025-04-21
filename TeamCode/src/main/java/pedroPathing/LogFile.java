@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.os.Environment;
 
 import com.pedropathing.localization.Pose;
+import com.pedropathing.util.CustomPIDFCoefficients;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -18,6 +19,7 @@ public class LogFile {
     private final String fileType;
     String logFolder;
     String message;
+    boolean isFirst = true;
 
     private FileWriter logWriter = null;
 
@@ -40,13 +42,10 @@ public class LogFile {
         absoluteStartTime = System.currentTimeMillis();
 
         // Define a unique file name
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm", Locale.US );
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss", Locale.US );
         timeStamp = dateFormat.format(new Date());
 
         logWriter = createFile();
-
-        message = "Filter,Time Stamp (ms),x,y,Heading (deg)";
-        localLog( logWriter, message );
     }
 
     /**
@@ -86,17 +85,31 @@ public class LogFile {
 
     /**
      *
+     * @param offset - numerical order to keep data in line
+     * @param target - pose to achieve
      * @param pose - heading and position
+     * @param coef - set of PID constants
      */
     @SuppressLint("DefaultLocale")
-    public void logStraightBackAndForth(int offset, double target, Pose pose) {
-        message = offset + "," +
-                String.format("%.4f", target) + "," +
-                String.format("%.4f", pose.getX()) + "," +
-                String.format("%.4f", pose.getY()) + "," +
-                String.format("%.4f", Math.toDegrees(pose.getHeading()));
-
-        localLog( logWriter, message );
+    public void logStraightBackAndForth(int offset, double target, Pose pose, CustomPIDFCoefficients coef) {
+        if (isFirst) {
+            isFirst = false;
+            message = "P=" + String.format("%.4f", coef.P);
+            localLog( logWriter, message );
+            message = "I=" + String.format("%.4f", coef.I);
+            localLog( logWriter, message );
+            message = "D=" + String.format("%.4f", coef.D);
+            localLog( logWriter, message );
+            message = "offset,target,X,Y,Head";
+            localLog( logWriter, message );
+        } else {
+            message = offset + "," +
+                    String.format("%.4f", target) + "," +
+                    String.format("%.4f", pose.getX()) + "," +
+                    String.format("%.4f", pose.getY()) + "," +
+                    String.format("%.4f", Math.toDegrees(pose.getHeading()));
+            localLog( logWriter, message );
+        }
     }
 
     private void localLog(FileWriter file, String message) {
